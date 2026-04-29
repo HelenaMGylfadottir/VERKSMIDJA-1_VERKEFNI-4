@@ -1,0 +1,2 @@
+# VERKSMIDJA-1_VERKEFNI-4
+VESM áfangi | vorönn 2026
