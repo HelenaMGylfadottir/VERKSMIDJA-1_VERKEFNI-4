@@ -157,6 +157,9 @@ while True:
                     players[x]["dabloons"] -= square[x]["price"]
                     players[x]["islands"].append(square[x]["nr"])
                 
+                elif downButtonPressed == True:
+                    
+                
             while ticks_diff(ticks_ms(),start_time) < sw_time:
                 lcd.clear()
                 lcd.move_to(0, 0)
