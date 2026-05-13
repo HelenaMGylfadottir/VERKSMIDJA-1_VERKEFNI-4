@@ -131,7 +131,7 @@ while True:
     
     if square == "island":
         chosen = False
-        while chosen == False
+        while chosen == False:
             sw_time = 400
             start_time = tics_ms()
             while ticks_diff(ticks_ms(),start_time) < sw_time:
@@ -152,13 +152,13 @@ while True:
                 downButtonStatus = downButtonStatus
                 
                 if upButtonPressed == True:
-                    chosen = True
-                    upButtonPressed = False
-                    players[x]["dabloons"] -= square[x]["price"]
-                    players[x]["islands"].append(square[x]["nr"])
-                
+                    #chosen = True
+                    #upButtonPressed = False
+                    #players[x]["dabloons"] -= square[x]["price"]
+                    #players[x]["islands"].append(square[x]["nr"])
+                    pass
                 elif downButtonPressed == True:
-                    
+                    pass
                 
             while ticks_diff(ticks_ms(),start_time) < sw_time:
                 lcd.clear()
