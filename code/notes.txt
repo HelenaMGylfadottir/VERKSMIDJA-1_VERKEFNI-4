@@ -1,0 +1,16 @@
+player {
+    position: 1 -> 20
+    dabloons: start 15
+    chests {}
+    prison: 0 # if the number is above 0 then it skips the player's turn and minuses by 1
+}
+
+chest / island pos {
+    level: 1 -> 5
+    stored: int
+}
+
+CHEST_COSTS = [10, 30, 50, 80, 100]
+UPGRADE_COSTS = [20, 50, 80, 120, 200]
+
+RENT_COSTS = [5, 10, 20, 60]
