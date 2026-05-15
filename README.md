@@ -1,39 +1,30 @@
 ## VERKSMIDJA-1_VERKEFNI-4
 VESM áfangi | vorönn 2026
 
-───────────────────────────
-
 ## Purrate Plunder
-
-───────────────────────────
 
 # **INTRODUCTION**
 
-───────────────────────────
-
 awesome introduction here
-
-───────────────────────────
 
 # 📖 **RULEBOOK**
 
-───────────────────────────
 # Objective
 
 Choose one mode:
-Last Cat Standing
-Play until all other players go bankrupt
-The last remaining player wins
-Treasure Count
-Stop at any agreed time
-Player with the most total dabloons (on-hand + stored) wins
+**Last Cat Standing**
+- Play until all other players go bankrupt
+- The last remaining player wins
+**Treasure Count**
+- Stop at any agreed time
+- Player with the most total dabloons (on-hand + stored) wins
 
-Components
+# Components
 20 Island Board
 LCD Display System
 LED strip Dice
 Buttons: + / – / →
-Equipment
+# Equipment
 1 Gameboard
 5 Cat playing figures
 10 Event Cards
