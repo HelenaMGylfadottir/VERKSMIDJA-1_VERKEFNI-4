@@ -1,31 +1,21 @@
 from machine import Pin, SoftI2C
 import neopixel
 from I2C_LCD import I2cLcd
-from time import sleep_ms, ticks_ms, ticks_diff
+from time import sleep, sleep_ms, ticks_ms, ticks_diff, time
 import random
 
 
-# -- Game buttons --
-upButton = Pin(9, Pin.IN, Pin.PULL_UP)
-downButton = Pin(10, Pin.IN, Pin.PULL_UP)
-enterButton = Pin(11, Pin.IN, Pin.PULL_UP)
-
-# -- button mechanics --
-upButtonPrevStatus = 1
-upButtonPressed = False
-
-downButtonPrevStatus = 1
-downButtonPressed = False
-
-enterButtonPrevStatus = 1
-enterButtonPressed = False
+# ------------------------
+#      BUTTON SETUP
+# ------------------------
+plus_button = Pin(9, Pin.IN, Pin.PULL_UP)
+minus_button = Pin(10, Pin.IN, Pin.PULL_UP)
+next_button = Pin(11, Pin.IN, Pin.PULL_UP)
 
 # -- Game button led's --
-upLed = Pin(14, Pin.OUT)
-downLed = Pin(21, Pin.OUT)
-enterLed = Pin(12, Pin.OUT)
-
-downLed.value(1)
+plus_Led = Pin(14, Pin.OUT)
+minus_Led = Pin(21, Pin.OUT)
+next_Led = Pin(12, Pin.OUT)
 
 # -- Reed switches --
 event1 = Pin(4, Pin.IN, Pin.PULL_UP)
@@ -50,120 +40,358 @@ lcd = I2cLcd(i2c, 39, 2, 16)
 
 # Færi bendilinn í staf nr. 0 og línu nr. 0
 lcd.move_to(0, 0)
-lcd.putstr("Hallo")
+lcd.putstr(" - Purrate -")
 # Færi bendilinn í staf nr. 0 og línu nr. 1
 lcd.move_to(0, 1)
-lcd.putstr("Heimur")
+lcd.putstr(" - Plunder -")
 
-lcd.move_to(8,0)
-lcd.putstr("BEEBEE")
-
-sleep_ms(1000)
+sleep(3)
 
 lcd.clear()
 
-# -- dice mechanic --
-dice = False
 
-# -- round mechanic place holder --
+# ------------------------
+#   BUTTON READ FUNCTION
+# ------------------------
+def wait_for_button():
+    while True:
+        if not plus_button.value():
+            time.sleep(0.2)
+            return "+"
+        if not minus_button.value():
+            time.sleep(0.2)
+            return "-"
+        if not next_button.value():
+            time.sleep(0.2)
+            return "n"
 
-square = "null"
-startRound = True
 
-while True:
+# ------------------------
+# CHEST SYSTEM CONFIG
+# ------------------------
+CHEST_COSTS = [10, 30, 50, 80, 100]
+UPGRADE_COSTS = [20, 50, 80, 120, 200]
 
-    upButtonStatus = upButton.value()
-    if upButtonStatus == 0 and upButtonPrevStatus == 1:
-        upButtonPressed = not upButtonPressed
-    upButtonStatus = upButtonStatus
+
+def get_chest_cost(player):
+    count = len(player["chests"])
+    if count >= len(CHEST_COSTS):
+        return CHEST_COSTS[-1]
+    return CHEST_COSTS[count]
+
+# ------------------------
+#      PLAYER SETUP
+# ------------------------
+def setup_players():
+    player_count = 2
     
-    downButtonStatus = downButton.value()
-    if downButtonStatus == 0 and downButtonPrevStatus == 1:
-        downButtonPressed = not downButtonPressed
-    downButtonStatus = downButtonStatus
+    lcd.clear()
+    # Færi bendilinn í staf nr. 0 og línu nr. 0
+    lcd.move_to(0, 0)
+    lcd.putstr("Select number")
+    # Færi bendilinn í staf nr. 0 og línu nr. 1
+    lcd.move_to(0, 1)
+    lcd.putstr("of players (2-5)")
+
+    sleep(2)
+    lcd.clear()
     
-    enterButtonStatus = enterButton.value()
-    if enterButtonStatus == 0 and enterButtonPrevStatus == 1:
-        enterButtonPressed = not enterButtonPressed
-    enterButtonStatus = enterButtonStatus
-    
-    
-    if enterButtonPressed == True:
-        if startRound == True:
-            dice = True
-            enterButtonPressed = False
-    
-    if dice == True:
+    while True:
+        #Færi bendilinn í staf nr. 0 og línu nr. 0
+        lcd.move_to(0, 0)
+        lcd.putstr("Players: ", player_count)
+        button = wait_for_button()
+
+        if button == "+" and player_count < 5:
+            player_count += 1
+        elif button == "-" and player_count > 2:
+            player_count -= 1
+        elif button == "n":
+            break
         
-        # -- function --
-        spins = random.randint(5,10) # how often the led dice should spin
-        nr = random.randint(1,6) # the random number it lands on
+    players = {}
+
+    for i in range(1, player_count + 1):
+        players[f"Player {i}"] = {
+            "position": 1,
+            "dabloons": 15,
+            "chests": {}
+        }
+
+    return players
+
+
+# ------------------------
+# MOVE PLAYER (LOOP BOARD)
+# ------------------------
+def move_player(position, roll):
+    new_position = position + roll
+    passed_start = False
+
+    if new_position > 20:
+        new_position = new_position % 20
+        if new_position == 0:
+            new_position = 20
+        passed_start = True
+
+    return new_position, passed_start
+
+# ------------------------
+#    TREASURE SYSTEM
+# ------------------------
+def treasure_roll():
+    if random.random() <= 0.4:
+        nr = random.randint(1, 5)
         
-        while spins > 0: # spins the amount of times of spins
-            for x in range(6):
+        np.fill(white)
+        np.write()
+        sleep_ms(300)
+        np.fill(off)
+        np.write()
+        sleep_ms(300)
+        np.fill(white)
+        np.write()
+        sleep_ms(300)
+        np.fill(off)
+        np.write()
+        sleep_ms(300)
+        np.fill(white)
+        np.write()
+        sleep_ms(300)
+        np.fill(off)
+        np.write()
+        sleep_ms(300)
+        
+        lcd.clear()
+        # Færi bendilinn í staf nr. 0 og línu nr. 0
+        lcd.move_to(0, 0)
+        lcd.putstr("You found")
+        # Færi bendilinn í staf nr. 0 og línu nr. 1
+        lcd.move_to(0, 1)
+        lcd.putstr(f"treasure! {nr}")
+        return nr
+    return 0
+
+def dice_roll():
+    spins = random.randint(5,10) # how often the led dice should spin
+    nr = random.randint(1,6) # the random number it lands on
+    velocity = 50
+    damp = velocity / spins
+    while spins > 0: # spins the amount of times of spins
+        for x in range(6):
+            if spins <= 1:
                 np.fill(off)
                 np.write()
                 np[x] = white
                 np.write()
-                sleep_ms(50)
-            spins -= 1
-        
-        # -- led dice --
-        np.fill(off)
-        np.write()
-        np[nr-1] = white
-        np.write()
-        sleep_ms(400)
-        
-        # -- lcd display --
-        lcd.clear()
-        lcd.move_to(0, 0)
-        lcd.putstr("Kastad teningur")
-        lcd.move_to(0, 1)
-        lcd.putstr(f"Tu fekst {nr}")
-        sleep_ms(3000)
-        lcd.clear()
-        lcd.move_to(0, 0)
-        lcd.putstr("Leikmadur x")
-        lcd.move_to(0, 1)
-        lcd.putstr("Faerdu a reit x")
-        dice = False
+                sleep_ms(velocity)
+            else:
+                if x != nr+1:
+                    np.fill(off)
+                    np.write()
+                    np[x] = white
+                    np.write()
+                    sleep_ms(velocity)
+                else:
+                    break
+        velocity -= damp
+            
+        spins -= 1
     
-    if square == "island":
-        chosen = False
-        while chosen == False:
-            sw_time = 400
-            start_time = tics_ms()
-            while ticks_diff(ticks_ms(),start_time) < sw_time:
+    # -- led dice --
+    np.fill(off)
+    np.write()
+    np[nr-1] = white
+    np.write()
+    sleep_ms(400)
+    
+    # -- lcd display --
+    lcd.clear()
+    np.fill(off)
+    np.write()
+    return nr
+
+def pay_island():
+    pass
+
+
+# ------------------------
+#     MAIN GAME LOOP
+# ------------------------
+def game_loop(players):
+    turn_order = list(players.keys())
+    current_player_index = 0
+
+    while True:
+        player_name = turn_order[current_player_index]
+        player = players[player_name]
+
+        print()
+        print("---", player_name, "TURN ---")
+        print("Position:", player["position"], "| Dabloons:", player["dabloons"])
+        
+        lcd.clear()
+        # Færi bendilinn í staf nr. 0 og línu nr. 0
+        lcd.move_to(0, 0)
+        lcd.putstr(f"{player_name} TURN")
+        # Færi bendilinn í staf nr. 0 og línu nr. 1
+        lcd.move_to(0, 1)
+        lcd.putstr(f"Pos:{player["position"]} $:{player["dabloons"]}")
+
+        while wait_for_button() != "n":
+            pass
+
+        roll = dice_roll()
+        lcd.clear()
+        # Færi bendilinn í staf nr. 0 og línu nr. 0
+        lcd.move_to(0, 0)
+        lcd.putstr(f"Rolled {roll}")
+
+        # Move
+        new_pos, passed_start = move_player(player["position"], roll)
+        player["position"] = new_pos
+
+        if passed_start:
+            print("Passed Start! +15 dabloons")
+            
+            lcd.clear()
+            # Færi bendilinn í staf nr. 0 og línu nr. 0
+            lcd.move_to(0, 0)
+            lcd.putstr("Passed Start!")
+            # Færi bendilinn í staf nr. 0 og línu nr. 1
+            lcd.move_to(0, 1)
+            lcd.putstr("+15 dabloons")
+            
+            player["dabloons"] += 15
+
+        print("Moved to tile", new_pos)
+        
+        lcd.clear()
+        # Færi bendilinn í staf nr. 0 og línu nr. 0
+        lcd.move_to(0, 0)
+        lcd.putstr(f"Moved to tile {new_pos}")
+
+        # Treasure
+        found = treasure_roll()
+        if found > 0:
+            print("Found", found, "dabloons!")
+            
+            lcd.clear()
+            # Færi bendilinn í staf nr. 0 og línu nr. 0
+            lcd.move_to(0, 0)
+            lcd.putstr("You found")
+            # Færi bendilinn í staf nr. 0 og línu nr. 1
+            lcd.move_to(0, 1)
+            lcd.putstr(f"{found} dabloons!")
+            
+            player["dabloons"] += found
+        else:
+            print("No treasure found")
+
+        # ------------------------
+        #     CHECK OWNERSHIP
+        # ------------------------
+        owner_name = None
+        for name, p in players.items():
+            if new_pos in p["chests"]:
+                owner_name = name
+                break
+
+        # ------------------------
+        # EMPTY ISLAND - BUY CHEST
+        # ------------------------
+        if owner_name is None:
+            
+            print("Empty island. Place chest? (+ yes / - no)")
+            
+            lcd.clear()
+            # Færi bendilinn í staf nr. 0 og línu nr. 0
+            lcd.move_to(0, 0)
+            lcd.putstr("Empty island- y")
+            # Færi bendilinn í staf nr. 0 og línu nr. 1
+            lcd.move_to(0, 1)
+            lcd.putstr("Place chest?- n")
+            
+            button = wait_for_button()
+
+            if button == "+":
+                cost = get_chest_cost(player)
+                print("Chest cost:", cost)
+
+                if player["dabloons"] >= cost:
+                    player["dabloons"] -= cost
+                    player["chests"][new_pos] = {
+                        "level": 1,
+                        "stored": 0
+                    }
+                    print("Chest placed!")
+                    
+                    lcd.clear()
+                    # Færi bendilinn í staf nr. 0 og línu nr. 0
+                    lcd.move_to(0, 0)
+                    lcd.putstr("Chest placed!")
+                    
+                else:
+                    print("Not enough dabloons")
+                    
+                    lcd.clear()
+                    # Færi bendilinn í staf nr. 0 og línu nr. 0
+                    lcd.move_to(0, 0)
+                    lcd.putstr("Not enough")
+                    # Færi bendilinn í staf nr. 0 og línu nr. 1
+                    lcd.move_to(0, 1)
+                    lcd.putstr("dabloons")
+
+        # ------------------------
+        # OWN ISLAND - UPGRADE CHEST
+        # ------------------------
+        elif owner_name == player_name:
+            chest = player["chests"][new_pos]
+            level = chest["level"]
+
+            upgrade_cost = get_upgrade_cost(level)
+
+            if upgrade_cost is None:
+                print("Chest already max level!")
+                
                 lcd.clear()
+                # Færi bendilinn í staf nr. 0 og línu nr. 0
                 lcd.move_to(0, 0)
-                lcd.putstr("Eyja x")
+                lcd.putstr("Chest already")
+                # Færi bendilinn í staf nr. 0 og línu nr. 1
                 lcd.move_to(0, 1)
-                lcd.putstr("Villtu kaupa?")
-                
-                upButtonStatus = upButton.value()
-                if upButtonStatus == 0 and upButtonPrevStatus == 1:
-                    upButtonPressed = not upButtonPressed
-                upButtonStatus = upButtonStatus
-                
-                downButtonStatus = downButton.value()
-                if downButtonStatus == 0 and downButtonPrevStatus == 1:
-                    downButtonPressed = not downButtonPressed
-                downButtonStatus = downButtonStatus
-                
-                if upButtonPressed == True:
-                    #chosen = True
-                    #upButtonPressed = False
-                    #players[x]["dabloons"] -= square[x]["price"]
-                    #players[x]["islands"].append(square[x]["nr"])
-                    pass
-                elif downButtonPressed == True:
-                    pass
-                
-            while ticks_diff(ticks_ms(),start_time) < sw_time:
-                lcd.clear()
-                lcd.move_to(0, 0)
-                lcd.putstr("Kaupa")
-                lcd.move_to(0, 1)
-                lcd.putstr("Sleppa")
+                lcd.putstr("max level!")
+            else:
+                print("Upgrade chest? Cost:", upgrade_cost, "(+ yes / - no)")
+                button = wait_for_button()
+
+                if button == "+":
+                    if player["dabloons"] >= upgrade_cost:
+                        player["dabloons"] -= upgrade_cost
+                        chest["level"] += 1
+                        print("Chest upgraded to level", chest["level"])
+                    else:
+                        print("Not enough dabloons")
+
+        # ------------------------
+        # OTHER PLAYER OWNERSHIP (placeholder)
+        # ------------------------
+        else:
+            print("Island owned by", owner_name)
+            # (Rent + stealing logic to be added)
+
+        # ------------------------
+        #        END TURN
+        # ------------------------
+        print("Press NEXT to end turn")
+        while wait_for_button() != "n":
+            pass
+
+        current_player_index = (current_player_index + 1) % len(turn_order)
+        
+# ------------------------
+#       START GAME
+# ------------------------
+players = setup_players()
+game_loop(players)
 
